@@ -2,7 +2,7 @@ import { Response } from 'express';
 import httpStatus from 'http-status';
 import { AuthenticatedRequest } from '@/middlewares';
 import { enrollmentsService } from '@/services';
-import { cepValidationSchema } from '@/schemas';
+import { cepQueryValidationSchema } from '@/schemas';
 
 export async function getEnrollmentByUser(req: AuthenticatedRequest, res: Response) {
   const { userId } = req;
@@ -25,12 +25,17 @@ export async function postCreateOrUpdateEnrollment(req: AuthenticatedRequest, re
 export async function getAddressFromCEP(req: AuthenticatedRequest, res: Response) {
   const { cep } = req.query;
 
-  const { error } = cepValidationSchema.validate(cep);
+  const { error } = cepQueryValidationSchema.validate(cep);
 
   if (error) {
     return res.status(httpStatus.BAD_REQUEST).json({ error: 'CEP inválido' });
   }
 
   const address = await enrollmentsService.getAddressFromCEP(cep as string);
+
+  if (address === null) {
+    return res.status(httpStatus.BAD_REQUEST).json({ error: 'Endereço não encontrado para o CEP fornecido' });
+  }
+
   res.status(httpStatus.OK).send(address);
 }

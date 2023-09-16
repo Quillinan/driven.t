@@ -4,7 +4,7 @@ import { CreateOrUpdateEnrollmentWithAddress } from '@/services';
 
 const cpfValidationSchema = Joi.string().length(11).custom(joiCpfValidation).required();
 
-export const cepValidationSchema = Joi.string().length(9).custom(joiCepValidation).required();
+const cepValidationSchema = Joi.string().length(9).custom(joiCepValidation).required();
 
 const mobilePhoneValidationSchema = Joi.string().min(14).max(15).custom(joiMobilePhoneValidation).required();
 
@@ -56,3 +56,8 @@ function joiMobilePhoneValidation(value: string, helpers: Joi.CustomHelpers<stri
 
   return value;
 }
+
+export const cepQueryValidationSchema = Joi.alternatives().try(
+  Joi.string().pattern(/^\d{5}-\d{3}$/),
+  Joi.string().length(8).pattern(/^\d+$/),
+);
