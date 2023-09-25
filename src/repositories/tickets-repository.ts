@@ -1,7 +1,8 @@
 import { prisma } from '@/config';
 import { notFoundError } from '@/errors';
+import { TicketType } from '@/protocols';
 
-async function findTypes() {
+async function findTypes(): Promise<TicketType[]> {
   const types = await prisma.ticketType.findMany();
   return types;
 }
@@ -34,7 +35,7 @@ async function findTicketsByUserId(userId: number) {
 }
 
 async function create(userId: number, ticketTypeId: number) {
-  if(!ticketTypeId){
+  if (!ticketTypeId) {
     throw notFoundError();
   }
   const enrollments = await prisma.enrollment.findFirst({
