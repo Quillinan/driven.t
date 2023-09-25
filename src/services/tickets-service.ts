@@ -6,12 +6,12 @@ async function getTicketTypes(): Promise<TicketType[]> {
   return types;
 }
 
-async function getTickets(userId: number): Promise<Ticket[]> {
+async function getTickets(userId: number) {
   const tickets = await ticketsRepository.findTicketsByUserId(userId);
   return tickets;
 }
 
-async function createTicket(userId: number, ticketTypeId: number): Promise<Ticket> {
+async function createTicket(userId: number, ticketTypeId: number) {
   const resp = await ticketsRepository.create(userId, ticketTypeId);
   return resp;
 }
