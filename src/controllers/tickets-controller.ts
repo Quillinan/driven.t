@@ -8,3 +8,11 @@ export async function getAllTicketTypes(req: AuthenticatedRequest, res: Response
 
   res.status(httpStatus.OK).json(types);
 }
+
+export async function getAllTickets(req: AuthenticatedRequest, res: Response) {
+  const { userId } = req;
+
+  const tickets = await ticketsService.getTickets(userId);
+  res.status(httpStatus.OK).send(tickets);
+}
+
