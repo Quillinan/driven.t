@@ -11,7 +11,14 @@ async function getTickets(userId: number) {
   return tickets;
 }
 
+async function createTicket(userId: number, ticketTypeId: number) {
+  const resp = await ticketsRepository.create(userId, ticketTypeId);
+  return resp;
+}
+
+
 export const ticketsService = {
   getTicketTypes,
   getTickets,
+  createTicket,
 };

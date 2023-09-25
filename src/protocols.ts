@@ -26,3 +26,7 @@ export type AddressEnrollment = {
 export type CEP = {
   cep: string;
 };
+
+export type TicketType = {
+  ticketTypeId: number;
+};
