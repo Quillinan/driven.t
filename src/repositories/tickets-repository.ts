@@ -1,8 +1,7 @@
 import { prisma } from '@/config';
 import { notFoundError } from '@/errors';
-import { TicketType } from '@/protocols';
 
-async function findTypes(): Promise<TicketType[]> {
+async function findTypes() {
   const types = await prisma.ticketType.findMany();
   return types;
 }
