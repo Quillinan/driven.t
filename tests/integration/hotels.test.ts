@@ -2,7 +2,14 @@ import httpStatus from 'http-status';
 import supertest from 'supertest';
 import { TicketStatus, User } from '@prisma/client';
 import { cleanDb, generateValidToken } from '../helpers';
-import { createEnrollmentWithAddress, createHotel, createTicket, createTicketType, createUser } from '../factories';
+import {
+  createEnrollmentWithAddress,
+  createHotel,
+  createRoom,
+  createTicket,
+  createTicketType,
+  createUser,
+} from '../factories';
 import app, { init } from '@/app';
 
 beforeAll(async () => {
@@ -44,14 +51,13 @@ describe('GET /hotels', () => {
   });
 
   describe('when token and ticket are valid', () => {
-    it('should respond with empty array when there are no hotels created', async () => {
+    it('should respond with status 404 when there are no hotels created', async () => {
       const data = await generateValidTicket();
       const token = await generateValidToken(data.user);
 
       const response = await server.get('/hotels').set('Authorization', `Bearer ${token}`);
 
-      expect(response.body).toEqual([]);
-      expect(response.status).toBe(httpStatus.OK);
+      expect(response.status).toBe(httpStatus.NOT_FOUND);
     });
 
     it('should respond with status 201 and with hotel data', async () => {
@@ -134,6 +140,7 @@ describe('GET /hotels/:hotelId', () => {
       const token = await generateValidToken(data.user);
 
       const hotel = await createHotel();
+      const room = await createRoom(hotel.id);
       const hotelId = hotel.id;
 
       const response = await server.get(`/hotels/${hotelId}`).set('Authorization', `Bearer ${token}`);
@@ -144,8 +151,20 @@ describe('GET /hotels/:hotelId', () => {
         image: hotel.image,
         createdAt: hotel.createdAt.toISOString(),
         updatedAt: hotel.updatedAt.toISOString(),
+        Rooms: [
+          {
+            id: room.id,
+            name: room.name,
+            capacity: room.capacity,
+            hotelId: room.hotelId,
+            createdAt: room.createdAt.toISOString(),
+            updatedAt: room.updatedAt.toISOString(),
+          },
+        ],
       });
       expect(response.status).toBe(httpStatus.OK);
+
+      expect(response.body.Rooms).not.toBeNull();
     });
   });
 });

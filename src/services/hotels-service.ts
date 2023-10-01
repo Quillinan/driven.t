@@ -4,6 +4,7 @@ import { hotelsRepository } from '@/repositories';
 
 async function findHotels(): Promise<Hotel[]> {
   const hotels = await hotelsRepository.findHotels();
+  if (!hotels || hotels.length === 0) throw notFoundError();
   return hotels;
 }
 
@@ -14,7 +15,7 @@ async function getHotelByHotelId(hotelId: string) {
     throw invalidDataError('HotelId');
   }
 
-  const hotel = await hotelsRepository.findHotelById(hotelIdNumber);
+  const hotel = await hotelsRepository.findHotelById(hotelIdNumber, { include: { Rooms: true } });
   if (!hotel) throw notFoundError();
 
   return hotel;
