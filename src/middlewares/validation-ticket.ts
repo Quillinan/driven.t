@@ -29,18 +29,5 @@ export async function validateTicket(req: AuthenticatedRequest, res: Response, n
   ) {
     throw paymentError();
   }
-
-  // if (!ticketData.TicketType.includesHotel) {
-  //   throw paymentError();
-  // }
-
-  // if (ticketData.TicketType.isRemote) {
-  //   throw paymentError();
-  // }
-
-  // if (ticketData.status !== TicketStatus.PAID) {
-  //   throw paymentError();
-  // }
-
   next();
 }
