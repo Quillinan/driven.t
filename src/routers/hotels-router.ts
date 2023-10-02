@@ -4,10 +4,10 @@ import { authenticateToken, validateTicket } from '@/middlewares';
 
 const hotelsRouter = Router();
 
-// Primeiro, aplique a autenticação a todas as rotas dentro de hotelsRouter
+// middlewares
 hotelsRouter.all('/*', authenticateToken, validateTicket);
 
-// Em seguida, defina as rotas GET
+//GET
 hotelsRouter.get('/', getHotels);
 hotelsRouter.get('/:hotelId', getHotelById);
 
