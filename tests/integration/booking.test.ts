@@ -1,6 +1,6 @@
 import supertest from 'supertest';
-import httpStatus from 'http-status';
 import { TicketStatus } from '@prisma/client';
+import httpStatus from 'http-status';
 import { cleanDb, generateValidToken } from '../helpers';
 import { createBookingWithRoom } from '../factories/booking-factory';
 import { createEnrollmentWithAddress, createPayment, createTicket, createTicketType, createUser } from '../factories';
@@ -28,19 +28,24 @@ describe('GET /booking', () => {
     expect(response.status).toBe(httpStatus.NOT_FOUND);
   });
   describe('when token is valid', () => {
-    it('should respond with status 404 if there is no booking for given token', async () => {
-      const data = await createBookingWithRoom();
-      const token = await generateValidToken(data.user);
-      const response = await server.get('/booking').set('Authorization', `Bearer ${token}`);
+    it('should respond with status 200 and with booking data', async () => {
+      const data = await createTicketAndPayment();
+      const booking = await createBookingWithRoom(data.user.id, data.room.id);
 
-      const formattedDates = {
-        ...data.result.Room,
-        createdAt: data.result.Room.createdAt.toISOString(),
-        updatedAt: data.result.Room.updatedAt.toISOString(),
-      };
+      const response = await server.get('/booking').set('Authorization', `Bearer ${data.token}`);
 
       expect(response.status).toBe(httpStatus.OK);
-      expect(response.body).toEqual({ id: data.result.id, Room: formattedDates });
+      expect(response.body).toEqual({
+        id: booking.id,
+        Room: {
+          id: data.room.id,
+          name: data.room.name,
+          capacity: data.room.capacity,
+          hotelId: data.room.hotelId,
+          createdAt: data.room.createdAt.toISOString(),
+          updatedAt: data.room.updatedAt.toISOString(),
+        },
+      });
     });
   });
 });
@@ -99,10 +104,7 @@ describe('POST /booking', () => {
     it('should respond with status 404 if room does not exist', async () => {
       const data = await createTicketAndPayment(false, true, true, false);
 
-      const response = await server
-        .post('/booking')
-        .set('Authorization', `Bearer ${data.token}`)
-        .send({ roomId: 1988798789 });
+      const response = await server.post('/booking').set('Authorization', `Bearer ${data.token}`).send({ roomId: 0 });
 
       expect(response.status).toBe(httpStatus.NOT_FOUND);
     });
@@ -117,6 +119,65 @@ describe('POST /booking', () => {
       expect(response.status).toBe(httpStatus.OK);
       expect(response.body).toEqual({
         bookingId: expect.any(Number),
+      });
+    });
+  });
+});
+
+describe('PUT /booking', () => {
+  it('should respond with status 401 if no token is given', async () => {
+    const response = await server.put('/booking');
+
+    expect(response.status).toBe(httpStatus.UNAUTHORIZED);
+  });
+
+  describe('when token is valid', () => {
+    it('should respond with status 403 if user does not have a booking', async () => {
+      const data = await createTicketAndPayment();
+
+      const response = await server
+        .put('/booking/1')
+        .set('Authorization', `Bearer ${data.token}`)
+        .send({ roomId: data.room.id });
+
+      expect(response.status).toBe(httpStatus.FORBIDDEN);
+    });
+
+    it('should respond with status 403 if room has no vacancy', async () => {
+      const data = await createTicketAndPayment(false, true, true, true, 0);
+
+      const response = await server
+        .put('/booking/1')
+        .set('Authorization', `Bearer ${data.token}`)
+        .send({ roomId: data.room.id });
+
+      expect(response.status).toBe(httpStatus.FORBIDDEN);
+    });
+
+    it('should respond with status 404 if room does not exist', async () => {
+      const data = await createTicketAndPayment(false, true, true, false);
+      const roomId = 0;
+
+      const response = await server
+        .put('/booking/1')
+        .set('Authorization', `Bearer ${data.token}`)
+        .send({ roomId: roomId });
+
+      expect(response.status).toBe(httpStatus.FORBIDDEN);
+    });
+
+    it('should respond with status 200 and with bookindId', async () => {
+      const data = await createTicketAndPayment();
+      const booking = await createBookingWithRoom(data.user.id, data.room.id);
+
+      const response = await server
+        .put(`/booking/${booking.id}`)
+        .set('Authorization', `Bearer ${data.token}`)
+        .send({ roomId: data.room.id });
+
+      expect(response.status).toBe(httpStatus.OK);
+      expect(response.body).toEqual({
+        bookingId: booking.id,
       });
     });
   });
@@ -147,5 +208,5 @@ async function createTicketAndPayment(
     room = await createRoomWithHotelId(hotel.id, capacity);
   }
 
-  return { token, room };
+  return { token, room, user };
 }
