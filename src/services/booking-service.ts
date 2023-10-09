@@ -36,7 +36,7 @@ async function createBooking(userId: number, roomId: number) {
 
   const newBooking = await bookingRepository.create(userId, roomId);
   return {
-    id: newBooking.id,
+    bookingId: newBooking.id,
   };
 }
 
