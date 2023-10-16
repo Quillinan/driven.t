@@ -2,10 +2,7 @@ import supertest from 'supertest';
 import { TicketStatus } from '@prisma/client';
 import httpStatus from 'http-status';
 import { cleanDb, generateValidToken } from '../helpers';
-import { createBookingWithRoom } from '../factories/booking-factory';
-import { createEnrollmentWithAddress, createPayment, createTicket, createTicketType, createUser } from '../factories';
-import { createHotel, createRoomWithHotelId } from '../factories/hotels-factory';
-
+import { createBookingWithRoom, createTicketAndPayment } from '../factories/booking-factory';
 import app, { init } from '@/app';
 
 beforeAll(async () => {
@@ -182,31 +179,3 @@ describe('PUT /booking', () => {
     });
   });
 });
-
-async function createTicketAndPayment(
-  isRemote = false,
-  includesHotel = true,
-  paid = true,
-  includesRoom = true,
-  capacity?: number,
-) {
-  let payment;
-  if (paid) {
-    payment = TicketStatus.PAID;
-  } else {
-    payment = TicketStatus.RESERVED;
-  }
-  const user = await createUser();
-  const token = await generateValidToken(user);
-  const enrollment = await createEnrollmentWithAddress(user);
-  const ticketType = await createTicketType(isRemote, includesHotel);
-  const ticket = await createTicket(enrollment.id, ticketType.id, payment);
-  await createPayment(ticket.id, ticketType.price);
-  let room = null;
-  if (includesRoom) {
-    const hotel = await createHotel();
-    room = await createRoomWithHotelId(hotel.id, capacity);
-  }
-
-  return { token, room, user };
-}
